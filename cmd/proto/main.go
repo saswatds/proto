@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -80,6 +81,14 @@ func main() {
 						os.Exit(1)
 					}
 					genCmd(c.Args().Get(0), c.String("M"))
+					return nil
+				},
+			},
+			{
+				Name:  "repair",
+				Usage: "Repair configuration by adding missing properties",
+				Action: func(c *cli.Context) error {
+					repairCmd()
 					return nil
 				},
 			},
@@ -470,5 +479,116 @@ func genCmd(sdkType string, moduleName string) {
 	default:
 		fmt.Println("Error: Unsupported SDK type. Use 'go' or 'python'")
 		os.Exit(1)
+	}
+}
+
+func repairCmd() {
+	config, err := proto.LoadConfig()
+	if err != nil {
+		fmt.Println("Error: Configuration not initialized. Run 'proto init' first")
+		os.Exit(1)
+	}
+
+	modified := false
+	reader := bufio.NewReader(os.Stdin)
+
+	// Check and repair GitHub URL
+	if config.GitHubURL == "" {
+		fmt.Print("Enter GitHub repository URL: ")
+		url, _ := reader.ReadString('\n')
+		config.GitHubURL = strings.TrimSpace(url)
+		modified = true
+	}
+
+	// Check and repair branch
+	if config.Branch == "" {
+		fmt.Print("Enter Git branch name [main]: ")
+		branch, _ := reader.ReadString('\n')
+		branch = strings.TrimSpace(branch)
+		if branch == "" {
+			branch = "main"
+		}
+		config.Branch = branch
+		modified = true
+	}
+
+	// Check and repair remote path
+	if config.RemotePath == "" {
+		fmt.Print("Enter path within the repository containing proto files: ")
+		path, _ := reader.ReadString('\n')
+		config.RemotePath = strings.TrimSpace(path)
+		modified = true
+	}
+
+	// Check and repair proto directory
+	if config.ProtoDir == "" {
+		fmt.Print("Enter directory for synced proto files [./proto]: ")
+		dir, _ := reader.ReadString('\n')
+		dir = strings.TrimSpace(dir)
+		if dir == "" {
+			dir = "./proto"
+		}
+		config.ProtoDir = dir
+		modified = true
+	}
+
+	// Check and repair build directory
+	if config.BuildDir == "" {
+		fmt.Print("Enter directory for generated SDKs [./gen]: ")
+		dir, _ := reader.ReadString('\n')
+		dir = strings.TrimSpace(dir)
+		if dir == "" {
+			dir = "./gen"
+		}
+		config.BuildDir = dir
+		modified = true
+	}
+
+	// Check and repair module name
+	if config.ModuleName == "" {
+		fmt.Print("Enter module name for the generated SDK: ")
+		module, _ := reader.ReadString('\n')
+		config.ModuleName = strings.TrimSpace(module)
+		modified = true
+	}
+
+	if modified {
+		// Create directories if they don't exist
+		if err := os.MkdirAll(config.ProtoDir, 0755); err != nil {
+			fmt.Printf("Error creating proto directory: %v\n", err)
+			os.Exit(1)
+		}
+		if err := os.MkdirAll(config.BuildDir, 0755); err != nil {
+			fmt.Printf("Error creating build directory: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Save the updated configuration
+		if err := proto.SaveConfig(config); err != nil {
+			fmt.Printf("Error saving config: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Read and print the updated config file
+		workDir, err := os.Getwd()
+		if err != nil {
+			fmt.Printf("Error getting current directory: %v\n", err)
+			os.Exit(1)
+		}
+
+		configPath := filepath.Join(workDir, ".protorc")
+		data, err := os.ReadFile(configPath)
+		if err != nil {
+			fmt.Printf("Error reading config file: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("\nConfiguration updated successfully")
+		fmt.Println("\nUpdated configuration file (.protorc):")
+		fmt.Println("----------------------------------------")
+		fmt.Println(string(data))
+		fmt.Println("----------------------------------------")
+	} else {
+		fmt.Println("Configuration is complete. No repairs needed.")
 	}
 }
