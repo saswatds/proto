@@ -1,3 +1,8 @@
+## [v0.9.0] - 2025-06-12
+
+### Added
+- generate the protofile in the root of gen directory
+
 ## [v0.8.1] - 2025-06-12
 
 ### Fixed
