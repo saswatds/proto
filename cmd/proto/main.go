@@ -47,10 +47,6 @@ func main() {
 						Usage: "Directory for generated SDKs",
 						Value: "./gen",
 					},
-					&cli.StringFlag{
-						Name:  "module-name",
-						Usage: "Module name for the generated SDK",
-					},
 				},
 				Action: func(c *cli.Context) error {
 					initCmd(c)
@@ -108,7 +104,6 @@ func initCmd(c *cli.Context) {
 		RemotePath: c.String("remote-path"),
 		ProtoDir:   c.String("proto-dir"),
 		BuildDir:   c.String("build-dir"),
-		ModuleName: c.String("module-name"),
 	}
 
 	// Create proto and gen directories if they don't exist
@@ -406,36 +401,93 @@ func genCmd(sdkType string, moduleName string) {
 			os.Exit(1)
 		}
 
-		// Generate Go SDK with gRPC
+		// Read go.mod to get module path
+		goModPath := filepath.Join(".", "go.mod")
+		goModContent, err := os.ReadFile(goModPath)
+		if err != nil {
+			fmt.Println("Error: go.mod file not found")
+			fmt.Println("Please ensure you're in a Go project directory with a go.mod file")
+			os.Exit(1)
+		}
+
+		// Extract module path from go.mod
+		var modulePath string
+		lines := strings.Split(string(goModContent), "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(strings.TrimSpace(line), "module ") {
+				modulePath = strings.TrimSpace(strings.TrimPrefix(line, "module "))
+				break
+			}
+		}
+
+		if modulePath == "" {
+			fmt.Println("Error: Could not find module path in go.mod")
+			os.Exit(1)
+		}
+
+		fmt.Printf("Using module path from go.mod: %s\n", modulePath)
+
+		// Add go_package option to proto files
+		var tmpProtoFiles []string
 		for _, protoFile := range protoFiles {
-			args := []string{
-				"--go_out=" + config.BuildDir,
-				"--go_opt=paths=source_relative",
-				"--go-grpc_out=" + config.BuildDir,
-				"--go-grpc_opt=paths=source_relative",
-			}
-
-			if config.ModuleName != "" {
-				// Format: M<proto_file>=<go_package>
-				protoFileName := filepath.Base(protoFile)
-				args = append(args, fmt.Sprintf("--go_opt=M%s=%s", protoFileName, config.ModuleName))
-				args = append(args, fmt.Sprintf("--go-grpc_opt=M%s=%s", protoFileName, config.ModuleName))
-			}
-
-			args = append(args, protoFile)
-			cmd := exec.Command("protoc", args...)
-
-			// Capture both stdout and stderr
-			output, err := cmd.CombinedOutput()
+			data, err := os.ReadFile(protoFile)
 			if err != nil {
-				fmt.Printf("Error generating Go SDK for %s:\n", filepath.Base(protoFile))
-				fmt.Println(string(output))
-				fmt.Println("\nCommon issues:")
-				fmt.Println("1. Missing go_package option in proto file")
-				fmt.Println("2. Invalid import paths")
-				fmt.Println("3. Syntax errors in proto file")
-				os.Exit(1)
+				fmt.Printf("Error reading proto file %s: %v\n", protoFile, err)
+				continue
 			}
+
+			// Create a temporary file in the same directory as the original
+			dir := filepath.Dir(protoFile)
+			tmpFile, err := os.CreateTemp(dir, "proto_*.proto")
+			if err != nil {
+				fmt.Printf("Error creating temp file: %v\n", err)
+				continue
+			}
+			defer os.Remove(tmpFile.Name())
+
+			// Add or update go_package option
+			content := string(data)
+			lines := strings.Split(content, "\n")
+			var newLines []string
+			packageLineFound := false
+
+			for _, line := range lines {
+				if strings.HasPrefix(strings.TrimSpace(line), "option go_package") {
+					// Skip existing go_package option
+					continue
+				}
+				newLines = append(newLines, line)
+				if strings.HasPrefix(strings.TrimSpace(line), "package ") && !packageLineFound {
+					newLines = append(newLines, fmt.Sprintf("option go_package = \"%s\";", modulePath))
+					packageLineFound = true
+				}
+			}
+
+			// Write to temp file
+			if err := os.WriteFile(tmpFile.Name(), []byte(strings.Join(newLines, "\n")), 0644); err != nil {
+				fmt.Printf("Error writing temp proto file: %v\n", err)
+				continue
+			}
+
+			tmpProtoFiles = append(tmpProtoFiles, tmpFile.Name())
+			fmt.Printf("Created temporary proto file: %s\n", tmpFile.Name())
+		}
+
+		// Generate Go SDK
+		args := []string{
+			"--go_out=" + config.BuildDir,
+			"--go_opt=paths=source_relative",
+			"--go-grpc_out=" + config.BuildDir,
+			"--go-grpc_opt=paths=source_relative",
+			"-I", ".",
+		}
+		args = append(args, tmpProtoFiles...)
+		cmd := exec.Command("protoc", args...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Error generating Go SDK: %v\n", err)
+			os.Exit(1)
 		}
 		fmt.Println("Go SDK (with gRPC) generated successfully in", config.BuildDir)
 
@@ -454,16 +506,10 @@ func genCmd(sdkType string, moduleName string) {
 			args := []string{
 				"--python_out=" + config.BuildDir,
 				"--grpc_python_out=" + config.BuildDir,
+				"-I", ".",
+				protoFile,
 			}
 
-			if config.ModuleName != "" {
-				// Format: M<proto_file>=<python_package>
-				protoFileName := filepath.Base(protoFile)
-				args = append(args, fmt.Sprintf("--python_opt=M%s=%s", protoFileName, config.ModuleName))
-				args = append(args, fmt.Sprintf("--grpc_python_opt=M%s=%s", protoFileName, config.ModuleName))
-			}
-
-			args = append(args, protoFile)
 			cmd := exec.Command("protoc", args...)
 
 			// Capture both stdout and stderr
@@ -545,14 +591,6 @@ func repairCmd() {
 			dir = "./gen"
 		}
 		config.BuildDir = dir
-		modified = true
-	}
-
-	// Check and repair module name
-	if config.ModuleName == "" {
-		fmt.Print("Enter module name for the generated SDK: ")
-		module, _ := reader.ReadString('\n')
-		config.ModuleName = strings.TrimSpace(module)
 		modified = true
 	}
 

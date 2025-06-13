@@ -16,7 +16,6 @@ type Config struct {
 	ProtoDir   string `yaml:"proto_dir"`
 	BuildDir   string `yaml:"build_dir"`
 	GitHead    string `yaml:"gitHead"`
-	ModuleName string `yaml:"module_name"`
 }
 
 // LoadConfig loads the configuration from .protorc
