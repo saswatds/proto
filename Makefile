@@ -22,21 +22,31 @@ update-version:
 	@echo "## [$(NEW_VERSION)] - $$(date +%Y-%m-%d)" > CHANGELOG.md.tmp
 	@echo "" >> CHANGELOG.md.tmp
 	@if [ -f commits.tmp ]; then \
-		echo "### Added" >> CHANGELOG.md.tmp; \
-		grep -i "^feat" commits.tmp | sed 's/^feat:/-/' >> CHANGELOG.md.tmp 2>/dev/null || true; \
-		echo "" >> CHANGELOG.md.tmp; \
-		echo "### Changed" >> CHANGELOG.md.tmp; \
-		grep -i "^refactor\|^perf" commits.tmp | sed 's/^refactor:/-/' | sed 's/^perf:/-/' >> CHANGELOG.md.tmp 2>/dev/null || true; \
-		echo "" >> CHANGELOG.md.tmp; \
-		echo "### Fixed" >> CHANGELOG.md.tmp; \
-		grep -i "^fix" commits.tmp | sed 's/^fix:/-/' >> CHANGELOG.md.tmp 2>/dev/null || true; \
-		echo "" >> CHANGELOG.md.tmp; \
-		echo "### Security" >> CHANGELOG.md.tmp; \
-		grep -i "^security" commits.tmp | sed 's/^security:/-/' >> CHANGELOG.md.tmp 2>/dev/null || true; \
-		echo "" >> CHANGELOG.md.tmp; \
-		echo "### Chore" >> CHANGELOG.md.tmp; \
-		grep -i "^chore\|^docs\|^style\|^test\|^ci" commits.tmp | sed 's/^chore:/-/' | sed 's/^docs:/-/' | sed 's/^style:/-/' | sed 's/^test:/-/' | sed 's/^ci:/-/' >> CHANGELOG.md.tmp 2>/dev/null || true; \
-		echo "" >> CHANGELOG.md.tmp; \
+		if grep -q -i "^feat" commits.tmp; then \
+			echo "### Added" >> CHANGELOG.md.tmp; \
+			grep -i "^feat" commits.tmp | sed 's/^feat:/-/' >> CHANGELOG.md.tmp; \
+			echo "" >> CHANGELOG.md.tmp; \
+		fi; \
+		if grep -q -i "^refactor\|^perf" commits.tmp; then \
+			echo "### Changed" >> CHANGELOG.md.tmp; \
+			grep -i "^refactor\|^perf" commits.tmp | sed 's/^refactor:/-/' | sed 's/^perf:/-/' >> CHANGELOG.md.tmp; \
+			echo "" >> CHANGELOG.md.tmp; \
+		fi; \
+		if grep -q -i "^fix" commits.tmp; then \
+			echo "### Fixed" >> CHANGELOG.md.tmp; \
+			grep -i "^fix" commits.tmp | sed 's/^fix:/-/' >> CHANGELOG.md.tmp; \
+			echo "" >> CHANGELOG.md.tmp; \
+		fi; \
+		if grep -q -i "^security" commits.tmp; then \
+			echo "### Security" >> CHANGELOG.md.tmp; \
+			grep -i "^security" commits.tmp | sed 's/^security:/-/' >> CHANGELOG.md.tmp; \
+			echo "" >> CHANGELOG.md.tmp; \
+		fi; \
+		if grep -q -i "^chore\|^docs\|^style\|^test\|^ci" commits.tmp; then \
+			echo "### Chore" >> CHANGELOG.md.tmp; \
+			grep -i "^chore\|^docs\|^style\|^test\|^ci" commits.tmp | sed 's/^chore:/-/' | sed 's/^docs:/-/' | sed 's/^style:/-/' | sed 's/^test:/-/' | sed 's/^ci:/-/' >> CHANGELOG.md.tmp; \
+			echo "" >> CHANGELOG.md.tmp; \
+		fi; \
 	fi
 	@cat CHANGELOG.md >> CHANGELOG.md.tmp
 	@mv CHANGELOG.md.tmp CHANGELOG.md
