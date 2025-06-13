@@ -1,3 +1,14 @@
+## [v0.8.0] - 2025-06-12
+
+### Added
+- handle creation of modules correctly
+
+### Fixed
+- properly format go exec path
+
+### Chore
+- updated tests
+
 ## [v0.7.0] - 2025-06-12
 
 ### Added
