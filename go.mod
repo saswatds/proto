@@ -1,3 +1,4 @@
+// v0.1.0
 module github.com/saswat/proto
 
 go 1.24.4
