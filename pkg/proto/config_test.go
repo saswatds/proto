@@ -28,9 +28,9 @@ func TestConfig(t *testing.T) {
 		{
 			name: "valid config",
 			config: &Config{
-				GitHubURL:    "https://github.com/example/proto",
+				GitHubURL:    "https://github.com/example/repo",
 				Branch:       "main",
-				ProtoPath:    "api/proto",
+				RemotePath:   "api/proto",
 				ProtoDir:     "./proto",
 				BuildDir:     "./gen",
 				LastCommitID: "abc123",
@@ -42,7 +42,7 @@ func TestConfig(t *testing.T) {
 			config: &Config{
 				GitHubURL:    "",
 				Branch:       "",
-				ProtoPath:    "",
+				RemotePath:   "",
 				ProtoDir:     "",
 				BuildDir:     "",
 				LastCommitID: "",
@@ -74,8 +74,8 @@ func TestConfig(t *testing.T) {
 				if got.Branch != tt.config.Branch {
 					t.Errorf("LoadConfig() Branch = %v, want %v", got.Branch, tt.config.Branch)
 				}
-				if got.ProtoPath != tt.config.ProtoPath {
-					t.Errorf("LoadConfig() ProtoPath = %v, want %v", got.ProtoPath, tt.config.ProtoPath)
+				if got.RemotePath != tt.config.RemotePath {
+					t.Errorf("LoadConfig() RemotePath = %v, want %v", got.RemotePath, tt.config.RemotePath)
 				}
 				if got.ProtoDir != tt.config.ProtoDir {
 					t.Errorf("LoadConfig() ProtoDir = %v, want %v", got.ProtoDir, tt.config.ProtoDir)
@@ -112,7 +112,7 @@ func TestLoadConfigNonExistent(t *testing.T) {
 	if config == nil {
 		t.Error("LoadConfig() returned nil config, want empty config")
 	}
-	if config.GitHubURL != "" || config.Branch != "" || config.ProtoPath != "" || config.ProtoDir != "" || config.BuildDir != "" || config.LastCommitID != "" {
+	if config.GitHubURL != "" || config.Branch != "" || config.RemotePath != "" || config.ProtoDir != "" || config.BuildDir != "" || config.LastCommitID != "" {
 		t.Error("LoadConfig() returned non-empty config for non-existent file")
 	}
 }
@@ -131,9 +131,9 @@ func TestSaveConfigInvalidPath(t *testing.T) {
 	defer os.Setenv("HOME", originalHome)
 
 	config := &Config{
-		GitHubURL:    "https://github.com/example/proto",
+		GitHubURL:    "https://github.com/example/repo",
 		Branch:       "main",
-		ProtoPath:    "api/proto",
+		RemotePath:   "api/proto",
 		ProtoDir:     "./proto",
 		BuildDir:     "./gen",
 		LastCommitID: "abc123",

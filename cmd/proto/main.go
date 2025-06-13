@@ -38,7 +38,7 @@ func initCmd() {
 	initFlags := flag.NewFlagSet("init", flag.ExitOnError)
 	githubURL := initFlags.String("url", "", "GitHub repository URL")
 	branch := initFlags.String("branch", "main", "Branch name")
-	protoPath := initFlags.String("proto-path", "", "Path within the repository containing proto files")
+	remotePath := initFlags.String("remote-path", "", "Path within the repository containing proto files")
 	protoDir := initFlags.String("proto-dir", "./proto", "Directory for synced proto files")
 	buildDir := initFlags.String("build-dir", "./gen", "Directory for generated SDKs")
 
@@ -50,11 +50,11 @@ func initCmd() {
 	}
 
 	config := &proto.Config{
-		GitHubURL: *githubURL,
-		Branch:    *branch,
-		ProtoPath: *protoPath,
-		ProtoDir:  *protoDir,
-		BuildDir:  *buildDir,
+		GitHubURL:  *githubURL,
+		Branch:     *branch,
+		RemotePath: *remotePath,
+		ProtoDir:   *protoDir,
+		BuildDir:   *buildDir,
 	}
 
 	if err := proto.SaveConfig(config); err != nil {
@@ -115,8 +115,8 @@ func syncCmd() {
 
 	// Determine the source directory for proto files
 	sourceDir := tempDir
-	if config.ProtoPath != "" {
-		sourceDir = filepath.Join(tempDir, config.ProtoPath)
+	if config.RemotePath != "" {
+		sourceDir = filepath.Join(tempDir, config.RemotePath)
 	}
 
 	// Copy proto files

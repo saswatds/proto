@@ -21,7 +21,7 @@ go install github.com/saswat/proto/cmd/proto@latest
 ### Initialize Configuration
 
 ```bash
-proto init --url <github-repo-url> [--branch <branch-name>] [--proto-path <path>] [--proto-dir <proto-dir>] [--build-dir <build-dir>]
+proto init --url <github-repo-url> [--branch <branch-name>] [--remote-path <path>] [--proto-dir <proto-dir>] [--build-dir <build-dir>]
 ```
 
 Example:
@@ -29,7 +29,7 @@ Example:
 proto init \
   --url https://github.com/example/proto-files \
   --branch main \
-  --proto-path api/proto \
+  --remote-path api/proto \
   --proto-dir ./proto \
   --build-dir ./gen
 ```
@@ -64,7 +64,7 @@ The tool stores its configuration in `~/.protorc` with the following YAML struct
 ```yaml
 github_url: https://github.com/example/proto-files
 branch: main
-proto_path: api/proto
+remote_path: api/proto
 proto_dir: ./proto
 build_dir: ./gen
 last_commit_id: abc123...
@@ -76,7 +76,7 @@ The tool maintains separate directories for different purposes:
 - `proto_dir`: Contains the synced .proto files from the repository
 - `build_dir`: Contains all generated SDK files (both Go and Python)
 
-The `proto_path` parameter allows you to specify a subdirectory within the repository where the proto files are located. For example, if your proto files are in the `api/proto` directory of your repository, you would set `proto_path: api/proto`.
+The `remote_path` parameter allows you to specify a subdirectory within the repository where the proto files are located. For example, if your proto files are in the `api/proto` directory of your repository, you would set `remote_path: api/proto`.
 
 ## Error Handling
 

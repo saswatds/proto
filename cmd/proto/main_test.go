@@ -37,7 +37,7 @@ func TestInitCommand(t *testing.T) {
 		},
 		{
 			name:    "valid init",
-			args:    []string{"init", "--url", "https://github.com/example/proto", "--branch", "main", "--dir", "./protos"},
+			args:    []string{"init", "--url", "https://github.com/example/proto", "--branch", "main", "--remote-path", "./protos"},
 			wantErr: false,
 		},
 	}
@@ -77,7 +77,7 @@ func TestSyncCommand(t *testing.T) {
 	defer os.Setenv("HOME", originalHome)
 
 	// Initialize with a test repository
-	os.Args = []string{"proto", "init", "--url", "https://github.com/example/proto", "--branch", "main", "--dir", "./protos"}
+	os.Args = []string{"proto", "init", "--url", "https://github.com/example/proto", "--branch", "main", "--remote-path", "./protos"}
 	main()
 
 	// Test sync command
@@ -105,7 +105,7 @@ func TestBuildCommand(t *testing.T) {
 	defer os.Setenv("HOME", originalHome)
 
 	// Initialize with a test repository
-	os.Args = []string{"proto", "init", "--url", "https://github.com/example/proto", "--branch", "main", "--dir", "./protos"}
+	os.Args = []string{"proto", "init", "--url", "https://github.com/example/proto", "--branch", "main", "--remote-path", "./protos"}
 	main()
 
 	// Test cases

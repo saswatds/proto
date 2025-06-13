@@ -11,9 +11,9 @@ import (
 type Config struct {
 	GitHubURL    string `yaml:"github_url"`
 	Branch       string `yaml:"branch"`
-	ProtoPath    string `yaml:"proto_path"` // Path within the repository containing proto files
-	ProtoDir     string `yaml:"proto_dir"`  // Directory for synced proto files
-	BuildDir     string `yaml:"build_dir"`  // Directory for generated SDKs
+	RemotePath   string `yaml:"remote_path"` // Path within the repository containing proto files
+	ProtoDir     string `yaml:"proto_dir"`   // Directory for synced proto files
+	BuildDir     string `yaml:"build_dir"`   // Directory for generated SDKs
 	LastCommitID string `yaml:"last_commit_id"`
 }
 
