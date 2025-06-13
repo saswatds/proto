@@ -21,6 +21,8 @@ push-release:
 	@echo "Pushing changes and tags..."
 	@git push
 	@git push --tags
+	@git tag -f latest
+	@git push -f origin latest
 	@echo "Changes and tags pushed successfully"
 
 # Create a minor release (e.g., v0.3.0 -> v0.4.0)
