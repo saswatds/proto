@@ -1,3 +1,8 @@
+## [v0.9.2] - 2025-06-12
+
+### Chore
+- fix check for mypy_protobuf
+
 ## [v0.9.1] - 2025-06-12
 
 ### Chore
