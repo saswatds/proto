@@ -160,7 +160,9 @@ func GenCmd(sdkType string, moduleName string) {
 			os.Exit(1)
 		}
 
-		if _, err := exec.LookPath("mypy-protobuf"); err != nil {
+		// Check if mypy-protobuf is installed
+		pythonCmd = exec.Command("python3", "-c", "import mypy_protobuf")
+		if err := pythonCmd.Run(); err != nil {
 			fmt.Println("Error: mypy-protobuf not found")
 			fmt.Println("\nPlease install it using:")
 			fmt.Println("pip install mypy-protobuf")
