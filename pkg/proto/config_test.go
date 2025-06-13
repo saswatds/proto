@@ -28,24 +28,24 @@ func TestConfig(t *testing.T) {
 		{
 			name: "valid config",
 			config: &Config{
-				GitHubURL:    "https://github.com/example/repo",
-				Branch:       "main",
-				RemotePath:   "api/proto",
-				ProtoDir:     "./proto",
-				BuildDir:     "./gen",
-				LastCommitID: "abc123",
+				GitHubURL:  "https://github.com/example/repo",
+				Branch:     "main",
+				RemotePath: "api/proto",
+				ProtoDir:   "./proto",
+				BuildDir:   "./gen",
+				GitHead:    "abc123",
 			},
 			wantErr: false,
 		},
 		{
 			name: "empty config",
 			config: &Config{
-				GitHubURL:    "",
-				Branch:       "",
-				RemotePath:   "",
-				ProtoDir:     "",
-				BuildDir:     "",
-				LastCommitID: "",
+				GitHubURL:  "",
+				Branch:     "",
+				RemotePath: "",
+				ProtoDir:   "",
+				BuildDir:   "",
+				GitHead:    "",
 			},
 			wantErr: false,
 		},
@@ -83,8 +83,8 @@ func TestConfig(t *testing.T) {
 				if got.BuildDir != tt.config.BuildDir {
 					t.Errorf("LoadConfig() BuildDir = %v, want %v", got.BuildDir, tt.config.BuildDir)
 				}
-				if got.LastCommitID != tt.config.LastCommitID {
-					t.Errorf("LoadConfig() LastCommitID = %v, want %v", got.LastCommitID, tt.config.LastCommitID)
+				if got.GitHead != tt.config.GitHead {
+					t.Errorf("LoadConfig() GitHead = %v, want %v", got.GitHead, tt.config.GitHead)
 				}
 			}
 		})
@@ -112,7 +112,7 @@ func TestLoadConfigNonExistent(t *testing.T) {
 	if config == nil {
 		t.Error("LoadConfig() returned nil config, want empty config")
 	}
-	if config.GitHubURL != "" || config.Branch != "" || config.RemotePath != "" || config.ProtoDir != "" || config.BuildDir != "" || config.LastCommitID != "" {
+	if config.GitHubURL != "" || config.Branch != "" || config.RemotePath != "" || config.ProtoDir != "" || config.BuildDir != "" || config.GitHead != "" {
 		t.Error("LoadConfig() returned non-empty config for non-existent file")
 	}
 }
@@ -131,12 +131,12 @@ func TestSaveConfigInvalidPath(t *testing.T) {
 	defer os.Setenv("HOME", originalHome)
 
 	config := &Config{
-		GitHubURL:    "https://github.com/example/repo",
-		Branch:       "main",
-		RemotePath:   "api/proto",
-		ProtoDir:     "./proto",
-		BuildDir:     "./gen",
-		LastCommitID: "abc123",
+		GitHubURL:  "https://github.com/example/repo",
+		Branch:     "main",
+		RemotePath: "api/proto",
+		ProtoDir:   "./proto",
+		BuildDir:   "./gen",
+		GitHead:    "abc123",
 	}
 
 	// Test saving to invalid path
