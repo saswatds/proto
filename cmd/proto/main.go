@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/saswatds/proto/pkg/proto"
 )
@@ -158,7 +159,9 @@ func syncCmd() {
 	// Determine the source directory for proto files
 	sourceDir := tempDir
 	if config.RemotePath != "" {
-		sourceDir = filepath.Join(tempDir, config.RemotePath)
+		// Remove any quotes from the remote path
+		cleanPath := strings.Trim(config.RemotePath, `"'`)
+		sourceDir = filepath.Join(tempDir, cleanPath)
 	}
 
 	// Copy proto files
@@ -170,6 +173,49 @@ func syncCmd() {
 
 	if len(protoFiles) == 0 {
 		fmt.Printf("No proto files found in %s\n", sourceDir)
+
+		// List all files and directories recursively from the root
+		fmt.Println("\nRepository structure:")
+		fmt.Println("----------------------------------------")
+		err = filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			// Skip the temp directory itself
+			if path == tempDir {
+				return nil
+			}
+			// Skip hidden files and directories
+			if strings.HasPrefix(info.Name(), ".") {
+				if info.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			// Get relative path from temp directory
+			relPath, err := filepath.Rel(tempDir, path)
+			if err != nil {
+				return err
+			}
+			// Calculate indentation based on depth
+			depth := strings.Count(relPath, string(os.PathSeparator))
+			indent := strings.Repeat("  ", depth)
+
+			if info.IsDir() {
+				fmt.Printf("%s%s/\n", indent, info.Name())
+			} else {
+				fmt.Printf("%s- %s (%d bytes)\n", indent, info.Name(), info.Size())
+			}
+			return nil
+		})
+		if err != nil {
+			fmt.Printf("Error walking directory: %v\n", err)
+		}
+		fmt.Println("----------------------------------------")
+		fmt.Println("\nPlease check if:")
+		fmt.Println("1. The remote_path is correct")
+		fmt.Println("2. The repository contains .proto files")
+		fmt.Println("3. The files are in the expected location")
 		os.Exit(1)
 	}
 

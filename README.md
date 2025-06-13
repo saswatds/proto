@@ -103,7 +103,7 @@ The tool stores its configuration in `.protorc` in the current working directory
 ```yaml
 github_url: https://github.com/example/proto-files
 branch: main
-remote_path: api/proto
+remote_path: api/proto  # Path within the repository containing proto files (quotes optional)
 proto_dir: ./proto
 build_dir: ./gen
 last_commit_id: abc123...
@@ -115,7 +115,7 @@ The tool maintains separate directories for different purposes:
 - `proto_dir`: Contains the synced .proto files from the repository
 - `build_dir`: Contains all generated SDK files (both Go and Python)
 
-The `remote_path` parameter allows you to specify a subdirectory within the repository where the proto files are located. For example, if your proto files are in the `api/proto` directory of your repository, you would set `remote_path: api/proto`.
+The `remote_path` parameter allows you to specify a subdirectory within the repository where the proto files are located. For example, if your proto files are in the `api/proto` directory of your repository, you would set `remote_path: api/proto`. The path can be specified with or without quotes, and both forward slashes and backslashes are supported.
 
 ## Error Handling
 
