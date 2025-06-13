@@ -13,7 +13,7 @@ go install github.com/saswatds/proto/cmd/proto@latest
 
 ### Specific Version
 ```bash
-go install github.com/saswatds/proto/cmd/proto@v0.6.2
+go install github.com/saswatds/proto/cmd/proto@v0.4.0
 ```
 
 ### From Source
@@ -25,39 +25,9 @@ go install ./cmd/proto
 
 ## Versioning
 
-This project follows [Semantic Versioning](https://semver.org/). The current version is v0.6.2.
+This project follows [Semantic Versioning](https://semver.org/). The current version is v0.4.0.
 
-- v0.4.0: Minor release
-  - Updated dependencies
-  - Improved documentation
-
-- v0.3.0: Enhanced project support and proto file handling
-  - Added automatic project type detection (Go/Python)
-  - Improved proto file package and go_package handling
-  - Added .gitignore for proto and gen directories
-  - Better error handling and user feedback
-  - Renamed build command to gen for clarity
-  - Added gRPC code generation support
-
-- v0.2.0: Project-specific configuration
-  - Moved configuration from home directory to project directory
-  - Added configuration file preview after initialization
-  - Improved error messages and user feedback
-  - Better project isolation and version control support
-
-- v0.1.2: Fixed module path
-  - Corrected module path from github.com/saswat/proto to github.com/saswatds/proto
-  - Ensures proper package resolution and installation
-
-- v0.1.1: Added help command
-  - Comprehensive help message with command descriptions
-  - Better error messages with usage suggestions
-  - Improved user experience for new users
-
-- v0.1.0: Initial release
-  - Basic proto file management
-  - Git repository integration
-  - Go and Python SDK generation
+For a detailed list of changes, see the [CHANGELOG.md](CHANGELOG.md).
 
 ## Prerequisites
 
