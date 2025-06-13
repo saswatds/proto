@@ -1,5 +1,5 @@
 // v0.1.1
-module github.com/saswat/proto
+module github.com/saswatds/proto
 
 go 1.24.4
 

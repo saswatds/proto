@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/saswat/proto/pkg/proto"
+	"github.com/saswatds/proto/pkg/proto"
 )
 
 func printHelp() {
