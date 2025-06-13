@@ -1,3 +1,8 @@
+## [v0.9.1] - 2025-06-12
+
+### Chore
+- generate mypy type definitions
+
 ## [v0.9.0] - 2025-06-12
 
 ### Added
