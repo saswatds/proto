@@ -8,13 +8,15 @@ import (
 	"strings"
 
 	"github.com/saswatds/proto/pkg/proto"
+	"github.com/saswatds/proto/pkg/version"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
 	app := &cli.App{
-		Name:  "proto",
-		Usage: "A CLI tool for managing Protocol Buffer files",
+		Name:    "proto",
+		Usage:   "A CLI tool for managing Protocol Buffer files",
+		Version: version.Version,
 		Commands: []*cli.Command{
 			{
 				Name:  "init",
