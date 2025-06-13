@@ -46,6 +46,10 @@ func main() {
 						Usage: "Directory for generated SDKs",
 						Value: "./gen",
 					},
+					&cli.StringFlag{
+						Name:  "module-name",
+						Usage: "Module name for the generated SDK",
+					},
 				},
 				Action: func(c *cli.Context) error {
 					initCmd(c)
@@ -63,12 +67,19 @@ func main() {
 			{
 				Name:  "gen",
 				Usage: "Generate SDKs from proto files",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "M",
+						Usage:   "Module name for the generated SDK",
+						Aliases: []string{"module"},
+					},
+				},
 				Action: func(c *cli.Context) error {
 					if c.NArg() == 0 {
 						fmt.Println("Error: Please specify the SDK type (go or python)")
 						os.Exit(1)
 					}
-					genCmd(c.Args().Get(0))
+					genCmd(c.Args().Get(0), c.String("M"))
 					return nil
 				},
 			},
@@ -88,6 +99,7 @@ func initCmd(c *cli.Context) {
 		RemotePath: c.String("remote-path"),
 		ProtoDir:   c.String("proto-dir"),
 		BuildDir:   c.String("build-dir"),
+		ModuleName: c.String("module-name"),
 	}
 
 	// Create proto and gen directories if they don't exist
@@ -333,7 +345,7 @@ func syncCmd() {
 	fmt.Println("Proto files synced successfully")
 }
 
-func genCmd(sdkType string) {
+func genCmd(sdkType string, moduleName string) {
 	config, err := proto.LoadConfig()
 	if err != nil {
 		fmt.Printf("Error loading config: %v\n", err)
@@ -387,12 +399,20 @@ func genCmd(sdkType string) {
 
 		// Generate Go SDK with gRPC
 		for _, protoFile := range protoFiles {
-			cmd := exec.Command("protoc",
-				"--go_out="+config.BuildDir,
+			args := []string{
+				"--go_out=" + config.BuildDir,
 				"--go_opt=paths=source_relative",
-				"--go-grpc_out="+config.BuildDir,
+				"--go-grpc_out=" + config.BuildDir,
 				"--go-grpc_opt=paths=source_relative",
-				protoFile)
+			}
+
+			if config.ModuleName != "" {
+				args = append(args, "--go_opt=M"+config.ModuleName)
+				args = append(args, "--go-grpc_opt=M"+config.ModuleName)
+			}
+
+			args = append(args, protoFile)
+			cmd := exec.Command("protoc", args...)
 
 			// Capture both stdout and stderr
 			output, err := cmd.CombinedOutput()
@@ -420,10 +440,18 @@ func genCmd(sdkType string) {
 
 		// Generate Python SDK with gRPC
 		for _, protoFile := range protoFiles {
-			cmd := exec.Command("protoc",
-				"--python_out="+config.BuildDir,
-				"--grpc_python_out="+config.BuildDir,
-				protoFile)
+			args := []string{
+				"--python_out=" + config.BuildDir,
+				"--grpc_python_out=" + config.BuildDir,
+			}
+
+			if config.ModuleName != "" {
+				args = append(args, "--python_opt=M"+config.ModuleName)
+				args = append(args, "--grpc_python_opt=M"+config.ModuleName)
+			}
+
+			args = append(args, protoFile)
+			cmd := exec.Command("protoc", args...)
 
 			// Capture both stdout and stderr
 			output, err := cmd.CombinedOutput()
