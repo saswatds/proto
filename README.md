@@ -33,6 +33,7 @@ This project follows [Semantic Versioning](https://semver.org/). The current ver
   - Added .gitignore for proto and gen directories
   - Better error handling and user feedback
   - Renamed build command to gen for clarity
+  - Added gRPC code generation support
 
 - v0.2.0: Project-specific configuration
   - Moved configuration from home directory to project directory
@@ -59,8 +60,15 @@ This project follows [Semantic Versioning](https://semver.org/). The current ver
 - Go 1.16 or later
 - Git
 - Protocol Buffers compiler (protoc)
-- Go protobuf plugin (`go install google.golang.org/protobuf/cmd/protoc-gen-go@latest`)
-- Python protobuf plugin (`pip install protobuf`)
+- Go protobuf plugins:
+  ```bash
+  go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+  go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+  ```
+- Python protobuf and gRPC plugins:
+  ```bash
+  pip install protobuf grpcio grpcio-tools
+  ```
 
 ## Usage
 

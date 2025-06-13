@@ -88,6 +88,16 @@ func initCmd(c *cli.Context) {
 		BuildDir:   c.String("build-dir"),
 	}
 
+	// Create proto and gen directories if they don't exist
+	if err := os.MkdirAll(config.ProtoDir, 0755); err != nil {
+		fmt.Printf("Error creating proto directory: %v\n", err)
+		os.Exit(1)
+	}
+	if err := os.MkdirAll(config.BuildDir, 0755); err != nil {
+		fmt.Printf("Error creating build directory: %v\n", err)
+		os.Exit(1)
+	}
+
 	if err := proto.SaveConfig(config); err != nil {
 		fmt.Printf("Error saving config: %v\n", err)
 		os.Exit(1)
@@ -112,6 +122,9 @@ func initCmd(c *cli.Context) {
 	fmt.Println("----------------------------------------")
 	fmt.Println(string(data))
 	fmt.Println("----------------------------------------")
+	fmt.Printf("\nCreated directories:\n")
+	fmt.Printf("- %s (for proto files)\n", config.ProtoDir)
+	fmt.Printf("- %s (for generated SDKs)\n", config.BuildDir)
 }
 
 func syncCmd() {
@@ -134,7 +147,6 @@ func syncCmd() {
 	}
 
 	var modulePath string
-	var projectType string
 
 	// Check for Go project
 	goModPath := filepath.Join(workDir, "go.mod")
@@ -147,7 +159,6 @@ func syncCmd() {
 		moduleLine := strings.Split(string(goModData), "\n")[0]
 		modulePath = strings.TrimPrefix(moduleLine, "module ")
 		modulePath = strings.TrimSpace(modulePath)
-		projectType = "go"
 	} else {
 		// Check for Python project
 		setupPyPath := filepath.Join(workDir, "setup.py")
@@ -170,7 +181,6 @@ func syncCmd() {
 				}
 				if end != -1 {
 					modulePath = strings.Trim(content[start:start+end], `"' `)
-					projectType = "python"
 				}
 			}
 		} else if _, err := os.Stat(pyProjectPath); err == nil {
@@ -186,7 +196,6 @@ func syncCmd() {
 				end := strings.Index(content[start:], "\n")
 				if end != -1 {
 					modulePath = strings.Trim(content[start:start+end], `"' `)
-					projectType = "python"
 				}
 			}
 		}
@@ -305,12 +314,11 @@ func syncCmd() {
 			os.Exit(1)
 		}
 
-		// Update package and go_package options
+		// Update package name only
 		content := string(data)
 		lines := strings.Split(content, "\n")
 		var updatedLines []string
 		packageFound := false
-		goPackageFound := false
 
 		for _, line := range lines {
 			trimmedLine := strings.TrimSpace(line)
@@ -322,37 +330,12 @@ func syncCmd() {
 				continue
 			}
 
-			// Update go_package option based on project type
-			if strings.HasPrefix(trimmedLine, "option go_package") {
-				goPackageFound = true
-				if projectType == "go" {
-					updatedLines = append(updatedLines, fmt.Sprintf(`option go_package = "%s";`, modulePath))
-				} else {
-					// For Python projects, use the package name as the go_package
-					updatedLines = append(updatedLines, fmt.Sprintf(`option go_package = "%s";`, modulePath))
-				}
-				continue
-			}
-
 			updatedLines = append(updatedLines, line)
 		}
 
-		// Add package and go_package if not found
+		// Add package if not found
 		if !packageFound {
 			updatedLines = append([]string{"package proto;"}, updatedLines...)
-		}
-		if !goPackageFound {
-			// Find the first line after syntax declaration
-			for i, line := range updatedLines {
-				if strings.HasPrefix(strings.TrimSpace(line), "syntax =") {
-					if projectType == "go" {
-						updatedLines = append(updatedLines[:i+1], append([]string{fmt.Sprintf(`option go_package = "%s";`, modulePath)}, updatedLines[i+1:]...)...)
-					} else {
-						updatedLines = append(updatedLines[:i+1], append([]string{fmt.Sprintf(`option go_package = "%s";`, modulePath)}, updatedLines[i+1:]...)...)
-					}
-					break
-				}
-			}
 		}
 
 		// Write the updated content
@@ -405,31 +388,34 @@ func genCmd(sdkType string) {
 	// Build proto files
 	switch sdkType {
 	case "go":
-		// Generate Go SDK
+		// Generate Go SDK with gRPC
 		for _, protoFile := range protoFiles {
 			cmd := exec.Command("protoc",
 				"--go_out="+config.BuildDir,
 				"--go_opt=paths=source_relative",
+				"--go-grpc_out="+config.BuildDir,
+				"--go-grpc_opt=paths=source_relative",
 				protoFile)
 			if err := cmd.Run(); err != nil {
 				fmt.Printf("Error generating Go SDK: %v\n", err)
 				os.Exit(1)
 			}
 		}
-		fmt.Println("Go SDK generated successfully in", config.BuildDir)
+		fmt.Println("Go SDK (with gRPC) generated successfully in", config.BuildDir)
 
 	case "python":
-		// Generate Python SDK
+		// Generate Python SDK with gRPC
 		for _, protoFile := range protoFiles {
 			cmd := exec.Command("protoc",
 				"--python_out="+config.BuildDir,
+				"--grpc_python_out="+config.BuildDir,
 				protoFile)
 			if err := cmd.Run(); err != nil {
 				fmt.Printf("Error generating Python SDK: %v\n", err)
 				os.Exit(1)
 			}
 		}
-		fmt.Println("Python SDK generated successfully in", config.BuildDir)
+		fmt.Println("Python SDK (with gRPC) generated successfully in", config.BuildDir)
 
 	default:
 		fmt.Println("Error: Unsupported SDK type. Use 'go' or 'python'")
