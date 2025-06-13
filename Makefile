@@ -10,10 +10,10 @@ PATCH := $(word 3,$(VERSION_PARTS))
 # Update version in all files
 update-version:
 	@echo "Updating version to $(NEW_VERSION)..."
-	@sed -i '' 's/const Version = ".*"/const Version = "$(NEW_VERSION)"/' pkg/version/version.go
-	@sed -i '' 's/\/\/ v.*/\/\/ $(NEW_VERSION)/' go.mod
-	@sed -i '' 's/go install github.com\/saswatds\/proto\/cmd\/proto@v.*/go install github.com\/saswatds\/proto\/cmd\/proto@$(NEW_VERSION)/' README.md
-	@sed -i '' 's/The current version is v.*/The current version is $(NEW_VERSION)./' README.md
+	@echo 'package version\n\n// Version is the current version of the application\nconst Version = "$(NEW_VERSION)"' > pkg/version/version.go
+	@echo "// $(NEW_VERSION)" > go.mod.tmp && cat go.mod | grep -v "^// v" >> go.mod.tmp && mv go.mod.tmp go.mod
+	@sed -i.bak 's/go install github.com\/saswatds\/proto\/cmd\/proto@v.*/go install github.com\/saswatds\/proto\/cmd\/proto@$(NEW_VERSION)/' README.md && rm README.md.bak
+	@sed -i.bak 's/The current version is v.*/The current version is $(NEW_VERSION)./' README.md && rm README.md.bak
 	@echo "Version updated to $(NEW_VERSION)"
 
 # Push changes and tags
