@@ -138,7 +138,7 @@ func GenCmd(sdkType string, moduleName string) {
 			"--go_opt=paths=source_relative",
 			"--go-grpc_out=" + config.BuildDir,
 			"--go-grpc_opt=paths=source_relative",
-			"-I", ".",
+			"-I", config.ProtoDir,
 		}
 		args = append(args, tmpProtoFiles...)
 		cmd := exec.Command("protoc", args...)
@@ -165,7 +165,7 @@ func GenCmd(sdkType string, moduleName string) {
 			args := []string{
 				"--python_out=" + config.BuildDir,
 				"--grpc_python_out=" + config.BuildDir,
-				"-I", ".",
+				"-I", config.ProtoDir,
 				protoFile,
 			}
 
