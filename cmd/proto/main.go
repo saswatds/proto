@@ -314,32 +314,8 @@ func syncCmd() {
 			os.Exit(1)
 		}
 
-		// Update package name only
-		content := string(data)
-		lines := strings.Split(content, "\n")
-		var updatedLines []string
-		packageFound := false
-
-		for _, line := range lines {
-			trimmedLine := strings.TrimSpace(line)
-
-			// Update package name
-			if strings.HasPrefix(trimmedLine, "package ") {
-				packageFound = true
-				updatedLines = append(updatedLines, "package proto;")
-				continue
-			}
-
-			updatedLines = append(updatedLines, line)
-		}
-
-		// Add package if not found
-		if !packageFound {
-			updatedLines = append([]string{"package proto;"}, updatedLines...)
-		}
-
-		// Write the updated content
-		if err := os.WriteFile(destPath, []byte(strings.Join(updatedLines, "\n")), 0644); err != nil {
+		// Write the file content as is, preserving all options
+		if err := os.WriteFile(destPath, data, 0644); err != nil {
 			fmt.Printf("Error writing proto file: %v\n", err)
 			os.Exit(1)
 		}
