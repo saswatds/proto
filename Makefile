@@ -28,7 +28,7 @@ release-minor:
 	@NEW_VERSION="v$(MAJOR).$$(( $(MINOR) + 1 )).0" $(MAKE) update-version
 	@git add pkg/version/version.go go.mod README.md
 	@git commit -m "Release $(NEW_VERSION)"
-	@git tag $(NEW_VERSION)
+	@git tag -a $(NEW_VERSION) -m "Release $(NEW_VERSION)"
 	@echo "Created minor release $(NEW_VERSION)"
 	@$(MAKE) push-release
 
@@ -37,7 +37,7 @@ release-patch:
 	@NEW_VERSION="v$(MAJOR).$(MINOR).$$(( $(PATCH) + 1 ))" $(MAKE) update-version
 	@git add pkg/version/version.go go.mod README.md
 	@git commit -m "Release $(NEW_VERSION)"
-	@git tag $(NEW_VERSION)
+	@git tag -a $(NEW_VERSION) -m "Release $(NEW_VERSION)"
 	@echo "Created patch release $(NEW_VERSION)"
 	@$(MAKE) push-release
 
