@@ -358,12 +358,31 @@ func genCmd(sdkType string) {
 
 	if len(protoFiles) == 0 {
 		fmt.Println("Error: No proto files found in", config.ProtoDir)
+		fmt.Println("\nPlease ensure:")
+		fmt.Println("1. You have run 'proto sync' to download proto files")
+		fmt.Println("2. The proto files are in the correct directory:", config.ProtoDir)
 		os.Exit(1)
 	}
 
 	// Build proto files
 	switch sdkType {
 	case "go":
+		// Check if protoc-gen-go is installed
+		if _, err := exec.LookPath("protoc-gen-go"); err != nil {
+			fmt.Println("Error: protoc-gen-go not found")
+			fmt.Println("\nPlease install it using:")
+			fmt.Println("go install google.golang.org/protobuf/cmd/protoc-gen-go@latest")
+			os.Exit(1)
+		}
+
+		// Check if protoc-gen-go-grpc is installed
+		if _, err := exec.LookPath("protoc-gen-go-grpc"); err != nil {
+			fmt.Println("Error: protoc-gen-go-grpc not found")
+			fmt.Println("\nPlease install it using:")
+			fmt.Println("go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest")
+			os.Exit(1)
+		}
+
 		// Generate Go SDK with gRPC
 		for _, protoFile := range protoFiles {
 			cmd := exec.Command("protoc",
@@ -372,22 +391,47 @@ func genCmd(sdkType string) {
 				"--go-grpc_out="+config.BuildDir,
 				"--go-grpc_opt=paths=source_relative",
 				protoFile)
-			if err := cmd.Run(); err != nil {
-				fmt.Printf("Error generating Go SDK: %v\n", err)
+
+			// Capture both stdout and stderr
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Printf("Error generating Go SDK for %s:\n", filepath.Base(protoFile))
+				fmt.Println(string(output))
+				fmt.Println("\nCommon issues:")
+				fmt.Println("1. Missing go_package option in proto file")
+				fmt.Println("2. Invalid import paths")
+				fmt.Println("3. Syntax errors in proto file")
 				os.Exit(1)
 			}
 		}
 		fmt.Println("Go SDK (with gRPC) generated successfully in", config.BuildDir)
 
 	case "python":
+		// Check if Python protobuf is installed
+		pythonCmd := exec.Command("python3", "-c", "import google.protobuf")
+		if err := pythonCmd.Run(); err != nil {
+			fmt.Println("Error: Python protobuf package not found")
+			fmt.Println("\nPlease install it using:")
+			fmt.Println("pip install protobuf grpcio grpcio-tools")
+			os.Exit(1)
+		}
+
 		// Generate Python SDK with gRPC
 		for _, protoFile := range protoFiles {
 			cmd := exec.Command("protoc",
 				"--python_out="+config.BuildDir,
 				"--grpc_python_out="+config.BuildDir,
 				protoFile)
-			if err := cmd.Run(); err != nil {
-				fmt.Printf("Error generating Python SDK: %v\n", err)
+
+			// Capture both stdout and stderr
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Printf("Error generating Python SDK for %s:\n", filepath.Base(protoFile))
+				fmt.Println(string(output))
+				fmt.Println("\nCommon issues:")
+				fmt.Println("1. Missing Python protobuf or gRPC packages")
+				fmt.Println("2. Syntax errors in proto file")
+				fmt.Println("3. Invalid import paths")
 				os.Exit(1)
 			}
 		}
