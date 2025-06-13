@@ -92,7 +92,7 @@ proto build python  # Build Python SDK in the build directory
 
 ## Configuration
 
-The tool stores its configuration in `~/.protorc` with the following YAML structure:
+The tool stores its configuration in `.protorc` in the current working directory with the following YAML structure:
 
 ```yaml
 github_url: https://github.com/example/proto-files

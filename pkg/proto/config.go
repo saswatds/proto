@@ -1,6 +1,7 @@
 package proto
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -19,12 +20,13 @@ type Config struct {
 
 // LoadConfig loads the configuration from .protorc file
 func LoadConfig() (*Config, error) {
-	homeDir, err := os.UserHomeDir()
+	// Get current working directory
+	workDir, err := os.Getwd()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get current directory: %v", err)
 	}
 
-	configPath := filepath.Join(homeDir, ".protorc")
+	configPath := filepath.Join(workDir, ".protorc")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -43,12 +45,20 @@ func LoadConfig() (*Config, error) {
 
 // SaveConfig saves the configuration to .protorc file
 func SaveConfig(config *Config) error {
-	homeDir, err := os.UserHomeDir()
+	// Get current working directory
+	workDir, err := os.Getwd()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get current directory: %v", err)
 	}
 
-	configPath := filepath.Join(homeDir, ".protorc")
+	configPath := filepath.Join(workDir, ".protorc")
+
+	// Create parent directory if it doesn't exist
+	configDir := filepath.Dir(configPath)
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %v", err)
+	}
+
 	data, err := yaml.Marshal(config)
 	if err != nil {
 		return err

@@ -86,7 +86,25 @@ func initCmd() {
 		os.Exit(1)
 	}
 
+	// Read and print the config file
+	workDir, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("Error getting current directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	configPath := filepath.Join(workDir, ".protorc")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		fmt.Printf("Error reading config file: %v\n", err)
+		os.Exit(1)
+	}
+
 	fmt.Println("Configuration initialized successfully")
+	fmt.Println("\nConfiguration file (.protorc):")
+	fmt.Println("----------------------------------------")
+	fmt.Println(string(data))
+	fmt.Println("----------------------------------------")
 }
 
 func syncCmd() {
