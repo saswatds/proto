@@ -416,8 +416,10 @@ func genCmd(sdkType string, moduleName string) {
 			}
 
 			if config.ModuleName != "" {
-				args = append(args, "--go_opt=M"+config.ModuleName)
-				args = append(args, "--go-grpc_opt=M"+config.ModuleName)
+				// Format: M<proto_file>=<go_package>
+				protoFileName := filepath.Base(protoFile)
+				args = append(args, fmt.Sprintf("--go_opt=M%s=%s", protoFileName, config.ModuleName))
+				args = append(args, fmt.Sprintf("--go-grpc_opt=M%s=%s", protoFileName, config.ModuleName))
 			}
 
 			args = append(args, protoFile)
@@ -455,8 +457,10 @@ func genCmd(sdkType string, moduleName string) {
 			}
 
 			if config.ModuleName != "" {
-				args = append(args, "--python_opt=M"+config.ModuleName)
-				args = append(args, "--grpc_python_opt=M"+config.ModuleName)
+				// Format: M<proto_file>=<python_package>
+				protoFileName := filepath.Base(protoFile)
+				args = append(args, fmt.Sprintf("--python_opt=M%s=%s", protoFileName, config.ModuleName))
+				args = append(args, fmt.Sprintf("--grpc_python_opt=M%s=%s", protoFileName, config.ModuleName))
 			}
 
 			args = append(args, protoFile)
