@@ -100,12 +100,9 @@ func GenCmd(sdkType string, moduleName string) {
 
 			// Create a temporary file in the same directory as the original
 			dir := filepath.Dir(protoFile)
-			tmpFile, err := os.CreateTemp(dir, "proto_*.proto")
-			if err != nil {
-				fmt.Printf("Error creating temp file: %v\n", err)
-				continue
-			}
-			defer os.Remove(tmpFile.Name())
+			baseName := filepath.Base(protoFile)
+			tmpFile := filepath.Join(dir, "pb_"+baseName)
+			defer os.Remove(tmpFile)
 
 			// Add or update go_package option
 			content := string(data)
@@ -126,13 +123,13 @@ func GenCmd(sdkType string, moduleName string) {
 			}
 
 			// Write to temp file
-			if err := os.WriteFile(tmpFile.Name(), []byte(strings.Join(newLines, "\n")), 0644); err != nil {
+			if err := os.WriteFile(tmpFile, []byte(strings.Join(newLines, "\n")), 0644); err != nil {
 				fmt.Printf("Error writing temp proto file: %v\n", err)
 				continue
 			}
 
-			tmpProtoFiles = append(tmpProtoFiles, tmpFile.Name())
-			fmt.Printf("Created temporary proto file: %s\n", tmpFile.Name())
+			tmpProtoFiles = append(tmpProtoFiles, tmpFile)
+			fmt.Printf("Created temporary proto file: %s\n", tmpFile)
 		}
 
 		// Generate Go SDK
