@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -9,77 +8,84 @@ import (
 	"strings"
 
 	"github.com/saswatds/proto/pkg/proto"
+	"github.com/urfave/cli/v2"
 )
 
-func printHelp() {
-	fmt.Println("Proto CLI Tool - A command-line tool for managing and syncing Protocol Buffer files")
-	fmt.Println("\nUsage:")
-	fmt.Println("  proto <command> [options]")
-	fmt.Println("\nCommands:")
-	fmt.Println("  init    - Initialize proto configuration")
-	fmt.Println("  sync    - Sync proto files from repository")
-	fmt.Println("  build   - Build SDKs (go|python)")
-	fmt.Println("  help    - Show this help message")
-	fmt.Println("\nOptions:")
-	fmt.Println("\ninit:")
-	fmt.Println("  --url string         GitHub repository URL (required)")
-	fmt.Println("  --branch string      Branch name (default: main)")
-	fmt.Println("  --remote-path string Path within the repository containing proto files")
-	fmt.Println("  --proto-dir string   Directory for synced proto files (default: ./proto)")
-	fmt.Println("  --build-dir string   Directory for generated SDKs (default: ./gen)")
-	fmt.Println("\nbuild:")
-	fmt.Println("  [go|python]          Specify the target language for SDK generation")
-	fmt.Println("\nExamples:")
-	fmt.Println("  proto init --url https://github.com/example/proto-files --branch main")
-	fmt.Println("  proto sync")
-	fmt.Println("  proto build go")
-	fmt.Println("  proto build python")
-}
-
 func main() {
-	if len(os.Args) < 2 {
-		printHelp()
-		os.Exit(1)
+	app := &cli.App{
+		Name:  "proto",
+		Usage: "A CLI tool for managing Protocol Buffer files",
+		Commands: []*cli.Command{
+			{
+				Name:  "init",
+				Usage: "Initialize configuration for proto repository",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "url",
+						Usage:    "GitHub repository URL",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:  "branch",
+						Usage: "Git branch name",
+						Value: "main",
+					},
+					&cli.StringFlag{
+						Name:  "remote-path",
+						Usage: "Path within the repository containing proto files",
+					},
+					&cli.StringFlag{
+						Name:  "proto-dir",
+						Usage: "Directory for synced proto files",
+						Value: "./proto",
+					},
+					&cli.StringFlag{
+						Name:  "build-dir",
+						Usage: "Directory for generated SDKs",
+						Value: "./gen",
+					},
+				},
+				Action: func(c *cli.Context) error {
+					initCmd(c)
+					return nil
+				},
+			},
+			{
+				Name:  "sync",
+				Usage: "Sync proto files from the repository",
+				Action: func(c *cli.Context) error {
+					syncCmd()
+					return nil
+				},
+			},
+			{
+				Name:  "gen",
+				Usage: "Generate SDKs from proto files",
+				Action: func(c *cli.Context) error {
+					if c.NArg() == 0 {
+						fmt.Println("Error: Please specify the SDK type (go or python)")
+						os.Exit(1)
+					}
+					genCmd(c.Args().Get(0))
+					return nil
+				},
+			},
+		},
 	}
 
-	command := os.Args[1]
-	switch command {
-	case "init":
-		initCmd()
-	case "sync":
-		syncCmd()
-	case "build":
-		buildCmd()
-	case "help":
-		printHelp()
-	default:
-		fmt.Printf("Unknown command: %s\n", command)
-		fmt.Println("Run 'proto help' for usage information")
+	if err := app.Run(os.Args); err != nil {
+		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func initCmd() {
-	initFlags := flag.NewFlagSet("init", flag.ExitOnError)
-	githubURL := initFlags.String("url", "", "GitHub repository URL")
-	branch := initFlags.String("branch", "main", "Branch name")
-	remotePath := initFlags.String("remote-path", "", "Path within the repository containing proto files")
-	protoDir := initFlags.String("proto-dir", "./proto", "Directory for synced proto files")
-	buildDir := initFlags.String("build-dir", "./gen", "Directory for generated SDKs")
-
-	initFlags.Parse(os.Args[2:])
-
-	if *githubURL == "" {
-		fmt.Println("Error: GitHub URL is required")
-		os.Exit(1)
-	}
-
+func initCmd(c *cli.Context) {
 	config := &proto.Config{
-		GitHubURL:  *githubURL,
-		Branch:     *branch,
-		RemotePath: *remotePath,
-		ProtoDir:   *protoDir,
-		BuildDir:   *buildDir,
+		GitHubURL:  c.String("url"),
+		Branch:     c.String("branch"),
+		RemotePath: c.String("remote-path"),
+		ProtoDir:   c.String("proto-dir"),
+		BuildDir:   c.String("build-dir"),
 	}
 
 	if err := proto.SaveConfig(config); err != nil {
@@ -120,6 +126,77 @@ func syncCmd() {
 		os.Exit(1)
 	}
 
+	// Get project type and module path
+	workDir, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("Error getting current directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	var modulePath string
+	var projectType string
+
+	// Check for Go project
+	goModPath := filepath.Join(workDir, "go.mod")
+	if _, err := os.Stat(goModPath); err == nil {
+		goModData, err := os.ReadFile(goModPath)
+		if err != nil {
+			fmt.Printf("Error reading go.mod: %v\n", err)
+			os.Exit(1)
+		}
+		moduleLine := strings.Split(string(goModData), "\n")[0]
+		modulePath = strings.TrimPrefix(moduleLine, "module ")
+		modulePath = strings.TrimSpace(modulePath)
+		projectType = "go"
+	} else {
+		// Check for Python project
+		setupPyPath := filepath.Join(workDir, "setup.py")
+		pyProjectPath := filepath.Join(workDir, "pyproject.toml")
+
+		if _, err := os.Stat(setupPyPath); err == nil {
+			// Read setup.py to get package name
+			setupPyData, err := os.ReadFile(setupPyPath)
+			if err != nil {
+				fmt.Printf("Error reading setup.py: %v\n", err)
+				os.Exit(1)
+			}
+			content := string(setupPyData)
+			// Simple regex to find package name
+			if strings.Contains(content, "name=") {
+				start := strings.Index(content, "name=") + 5
+				end := strings.Index(content[start:], ",")
+				if end == -1 {
+					end = strings.Index(content[start:], ")")
+				}
+				if end != -1 {
+					modulePath = strings.Trim(content[start:start+end], `"' `)
+					projectType = "python"
+				}
+			}
+		} else if _, err := os.Stat(pyProjectPath); err == nil {
+			// Read pyproject.toml to get package name
+			pyProjectData, err := os.ReadFile(pyProjectPath)
+			if err != nil {
+				fmt.Printf("Error reading pyproject.toml: %v\n", err)
+				os.Exit(1)
+			}
+			content := string(pyProjectData)
+			if strings.Contains(content, "name =") {
+				start := strings.Index(content, "name =") + 6
+				end := strings.Index(content[start:], "\n")
+				if end != -1 {
+					modulePath = strings.Trim(content[start:start+end], `"' `)
+					projectType = "python"
+				}
+			}
+		}
+	}
+
+	if modulePath == "" {
+		fmt.Println("Error: Could not determine project type. Please ensure you're in a Go or Python project directory")
+		os.Exit(1)
+	}
+
 	// Create temporary directory for cloning
 	tempDir, err := os.MkdirTemp("", "proto-sync-*")
 	if err != nil {
@@ -145,7 +222,7 @@ func syncCmd() {
 	}
 
 	// If commit ID hasn't changed, exit
-	if string(commitID) == config.LastCommitID {
+	if string(commitID) == config.GitHead {
 		fmt.Println("Already up to date")
 		return
 	}
@@ -228,14 +305,65 @@ func syncCmd() {
 			os.Exit(1)
 		}
 
-		if err := os.WriteFile(destPath, data, 0644); err != nil {
+		// Update package and go_package options
+		content := string(data)
+		lines := strings.Split(content, "\n")
+		var updatedLines []string
+		packageFound := false
+		goPackageFound := false
+
+		for _, line := range lines {
+			trimmedLine := strings.TrimSpace(line)
+
+			// Update package name
+			if strings.HasPrefix(trimmedLine, "package ") {
+				packageFound = true
+				updatedLines = append(updatedLines, "package proto;")
+				continue
+			}
+
+			// Update go_package option based on project type
+			if strings.HasPrefix(trimmedLine, "option go_package") {
+				goPackageFound = true
+				if projectType == "go" {
+					updatedLines = append(updatedLines, fmt.Sprintf(`option go_package = "%s";`, modulePath))
+				} else {
+					// For Python projects, use the package name as the go_package
+					updatedLines = append(updatedLines, fmt.Sprintf(`option go_package = "%s";`, modulePath))
+				}
+				continue
+			}
+
+			updatedLines = append(updatedLines, line)
+		}
+
+		// Add package and go_package if not found
+		if !packageFound {
+			updatedLines = append([]string{"package proto;"}, updatedLines...)
+		}
+		if !goPackageFound {
+			// Find the first line after syntax declaration
+			for i, line := range updatedLines {
+				if strings.HasPrefix(strings.TrimSpace(line), "syntax =") {
+					if projectType == "go" {
+						updatedLines = append(updatedLines[:i+1], append([]string{fmt.Sprintf(`option go_package = "%s";`, modulePath)}, updatedLines[i+1:]...)...)
+					} else {
+						updatedLines = append(updatedLines[:i+1], append([]string{fmt.Sprintf(`option go_package = "%s";`, modulePath)}, updatedLines[i+1:]...)...)
+					}
+					break
+				}
+			}
+		}
+
+		// Write the updated content
+		if err := os.WriteFile(destPath, []byte(strings.Join(updatedLines, "\n")), 0644); err != nil {
 			fmt.Printf("Error writing proto file: %v\n", err)
 			os.Exit(1)
 		}
 	}
 
-	// Update last commit ID
-	config.LastCommitID = string(commitID)
+	// Update git head
+	config.GitHead = string(commitID)
 	if err := proto.SaveConfig(config); err != nil {
 		fmt.Printf("Error updating config: %v\n", err)
 		os.Exit(1)
@@ -244,79 +372,67 @@ func syncCmd() {
 	fmt.Println("Proto files synced successfully")
 }
 
-func buildCmd() {
-	if len(os.Args) < 3 {
-		fmt.Println("Usage: proto build [go|python]")
-		os.Exit(1)
-	}
-
+func genCmd(sdkType string) {
 	config, err := proto.LoadConfig()
 	if err != nil {
 		fmt.Printf("Error loading config: %v\n", err)
 		os.Exit(1)
 	}
 
-	lang := os.Args[2]
-	switch lang {
+	if config.GitHubURL == "" {
+		fmt.Println("Error: Configuration not initialized. Run 'proto init' first")
+		os.Exit(1)
+	}
+
+	// Create build directory if it doesn't exist
+	if err := os.MkdirAll(config.BuildDir, 0755); err != nil {
+		fmt.Printf("Error creating build directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Get all proto files
+	protoFiles, err := filepath.Glob(filepath.Join(config.ProtoDir, "*.proto"))
+	if err != nil {
+		fmt.Printf("Error finding proto files: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(protoFiles) == 0 {
+		fmt.Println("Error: No proto files found in", config.ProtoDir)
+		os.Exit(1)
+	}
+
+	// Build proto files
+	switch sdkType {
 	case "go":
-		buildGoSDK(config)
+		// Generate Go SDK
+		for _, protoFile := range protoFiles {
+			cmd := exec.Command("protoc",
+				"--go_out="+config.BuildDir,
+				"--go_opt=paths=source_relative",
+				protoFile)
+			if err := cmd.Run(); err != nil {
+				fmt.Printf("Error generating Go SDK: %v\n", err)
+				os.Exit(1)
+			}
+		}
+		fmt.Println("Go SDK generated successfully in", config.BuildDir)
+
 	case "python":
-		buildPythonSDK(config)
+		// Generate Python SDK
+		for _, protoFile := range protoFiles {
+			cmd := exec.Command("protoc",
+				"--python_out="+config.BuildDir,
+				protoFile)
+			if err := cmd.Run(); err != nil {
+				fmt.Printf("Error generating Python SDK: %v\n", err)
+				os.Exit(1)
+			}
+		}
+		fmt.Println("Python SDK generated successfully in", config.BuildDir)
+
 	default:
-		fmt.Printf("Unsupported language: %s\n", lang)
+		fmt.Println("Error: Unsupported SDK type. Use 'go' or 'python'")
 		os.Exit(1)
 	}
-}
-
-func buildGoSDK(config *proto.Config) {
-	// Create build directory if it doesn't exist
-	if err := os.MkdirAll(config.BuildDir, 0755); err != nil {
-		fmt.Printf("Error creating build directory: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Find all proto files
-	protoFiles, err := filepath.Glob(filepath.Join(config.ProtoDir, "*.proto"))
-	if err != nil {
-		fmt.Printf("Error finding proto files: %v\n", err)
-		os.Exit(1)
-	}
-
-	for _, protoFile := range protoFiles {
-		cmd := exec.Command("protoc",
-			"--go_out="+config.BuildDir,
-			"--go_opt=paths=source_relative",
-			protoFile)
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("Error building Go SDK: %v\n", err)
-			os.Exit(1)
-		}
-	}
-	fmt.Println("Go SDK built successfully")
-}
-
-func buildPythonSDK(config *proto.Config) {
-	// Create build directory if it doesn't exist
-	if err := os.MkdirAll(config.BuildDir, 0755); err != nil {
-		fmt.Printf("Error creating build directory: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Find all proto files
-	protoFiles, err := filepath.Glob(filepath.Join(config.ProtoDir, "*.proto"))
-	if err != nil {
-		fmt.Printf("Error finding proto files: %v\n", err)
-		os.Exit(1)
-	}
-
-	for _, protoFile := range protoFiles {
-		cmd := exec.Command("protoc",
-			"--python_out="+config.BuildDir,
-			protoFile)
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("Error building Python SDK: %v\n", err)
-			os.Exit(1)
-		}
-	}
-	fmt.Println("Python SDK built successfully")
 }

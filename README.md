@@ -82,18 +82,18 @@ proto sync
 This command will:
 1. Check if there are any new changes in the repository
 2. Download and sync the proto files from the specified path to the proto directory if changes are detected
-3. Update the last commit ID in the configuration
+3. Update the git head in the configuration
 
-### Build SDKs
+### Generate SDKs
 
 ```bash
-proto build [go|python]
+proto gen [go|python]
 ```
 
 Example:
 ```bash
-proto build go    # Build Go SDK in the build directory
-proto build python  # Build Python SDK in the build directory
+proto gen go    # Generate Go SDK in the build directory
+proto gen python  # Generate Python SDK in the build directory
 ```
 
 ## Configuration
@@ -106,7 +106,7 @@ branch: main
 remote_path: api/proto  # Path within the repository containing proto files (quotes optional)
 proto_dir: ./proto
 build_dir: ./gen
-last_commit_id: abc123...
+gitHead: abc123...  # Latest commit ID from the repository
 ```
 
 ## Directory Structure
