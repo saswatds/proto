@@ -10,13 +10,34 @@ import (
 	"github.com/saswat/proto/pkg/proto"
 )
 
+func printHelp() {
+	fmt.Println("Proto CLI Tool - A command-line tool for managing and syncing Protocol Buffer files")
+	fmt.Println("\nUsage:")
+	fmt.Println("  proto <command> [options]")
+	fmt.Println("\nCommands:")
+	fmt.Println("  init    - Initialize proto configuration")
+	fmt.Println("  sync    - Sync proto files from repository")
+	fmt.Println("  build   - Build SDKs (go|python)")
+	fmt.Println("  help    - Show this help message")
+	fmt.Println("\nOptions:")
+	fmt.Println("\ninit:")
+	fmt.Println("  --url string         GitHub repository URL (required)")
+	fmt.Println("  --branch string      Branch name (default: main)")
+	fmt.Println("  --remote-path string Path within the repository containing proto files")
+	fmt.Println("  --proto-dir string   Directory for synced proto files (default: ./proto)")
+	fmt.Println("  --build-dir string   Directory for generated SDKs (default: ./gen)")
+	fmt.Println("\nbuild:")
+	fmt.Println("  [go|python]          Specify the target language for SDK generation")
+	fmt.Println("\nExamples:")
+	fmt.Println("  proto init --url https://github.com/example/proto-files --branch main")
+	fmt.Println("  proto sync")
+	fmt.Println("  proto build go")
+	fmt.Println("  proto build python")
+}
+
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: proto <command> [options]")
-		fmt.Println("Commands:")
-		fmt.Println("  init    - Initialize proto configuration")
-		fmt.Println("  sync    - Sync proto files from repository")
-		fmt.Println("  build   - Build SDKs (go|python)")
+		printHelp()
 		os.Exit(1)
 	}
 
@@ -28,8 +49,11 @@ func main() {
 		syncCmd()
 	case "build":
 		buildCmd()
+	case "help":
+		printHelp()
 	default:
 		fmt.Printf("Unknown command: %s\n", command)
+		fmt.Println("Run 'proto help' for usage information")
 		os.Exit(1)
 	}
 }
