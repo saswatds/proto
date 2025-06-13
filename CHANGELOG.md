@@ -1,3 +1,16 @@
+## [v0.6.3] - 2025-06-12
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Security
+
+### Chore
+- handle better changelog
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
