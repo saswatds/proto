@@ -8,17 +8,17 @@ You can install the tool in several ways:
 
 ### Latest Version
 ```bash
-go install github.com/saswat/proto/cmd/proto@latest
+go install github.com/saswatds/proto/cmd/proto@latest
 ```
 
 ### Specific Version
 ```bash
-go install github.com/saswat/proto/cmd/proto@v0.1.0
+go install github.com/saswatds/proto/cmd/proto@v0.1.0
 ```
 
 ### From Source
 ```bash
-git clone https://github.com/saswat/proto.git
+git clone https://github.com/saswatds/proto.git
 cd proto
 go install ./cmd/proto
 ```
