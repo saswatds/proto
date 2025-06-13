@@ -179,6 +179,9 @@ func GenCmd(sdkType string, moduleName string) {
 				protoFile,
 			}
 
+			// Log the args
+			fmt.Println("Generating Python SDK with args:", args)
+
 			cmd := exec.Command("protoc", args...)
 
 			// Capture both stdout and stderr
