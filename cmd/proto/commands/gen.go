@@ -160,11 +160,19 @@ func GenCmd(sdkType string, moduleName string) {
 			os.Exit(1)
 		}
 
+		if _, err := exec.LookPath("mypy-protobuf"); err != nil {
+			fmt.Println("Error: mypy-protobuf not found")
+			fmt.Println("\nPlease install it using:")
+			fmt.Println("pip install mypy-protobuf")
+			os.Exit(1)
+		}
+
 		// Generate Python SDK with gRPC
 		for _, protoFile := range protoFiles {
 			args := []string{
 				"--python_out=" + config.BuildDir,
 				"--grpc_python_out=" + config.BuildDir,
+				"--mypy_out=" + config.BuildDir,
 				"-I", config.ProtoDir,
 				protoFile,
 			}
