@@ -1,3 +1,9 @@
+## [v0.8.1] - 2025-06-12
+
+### Fixed
+- handle generation better
+- handle sync function correctly
+
 ## [v0.8.0] - 2025-06-12
 
 ### Added
