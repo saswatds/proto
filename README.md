@@ -13,7 +13,7 @@ go install github.com/saswatds/proto/cmd/proto@latest
 
 ### Specific Version
 ```bash
-go install github.com/saswatds/proto/cmd/proto@v0.1.2
+go install github.com/saswatds/proto/cmd/proto@v0.2.0
 ```
 
 ### From Source
@@ -25,7 +25,13 @@ go install ./cmd/proto
 
 ## Versioning
 
-This project follows [Semantic Versioning](https://semver.org/). The current version is v0.1.2.
+This project follows [Semantic Versioning](https://semver.org/). The current version is v0.2.0.
+
+- v0.2.0: Project-specific configuration
+  - Moved configuration from home directory to project directory
+  - Added configuration file preview after initialization
+  - Improved error messages and user feedback
+  - Better project isolation and version control support
 
 - v0.1.2: Fixed module path
   - Corrected module path from github.com/saswat/proto to github.com/saswatds/proto
