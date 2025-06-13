@@ -1,3 +1,13 @@
+## [v0.7.0] - 2025-06-12
+
+### Added
+- added repair command
+- added support for passing module name
+
+### Chore
+- fix missing data
+- handle change log better
+
 ## [v0.6.3] - 2025-06-12
 
 ### Added

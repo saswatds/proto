@@ -1,4 +1,4 @@
-// v0.6.3
+// v0.7.0
 module github.com/saswatds/proto
 
 go 1.24.4
