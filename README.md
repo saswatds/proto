@@ -4,9 +4,33 @@ A command-line tool for managing and syncing Protocol Buffer files from Git repo
 
 ## Installation
 
+You can install the tool in several ways:
+
+### Latest Version
 ```bash
 go install github.com/saswat/proto/cmd/proto@latest
 ```
+
+### Specific Version
+```bash
+go install github.com/saswat/proto/cmd/proto@v0.1.0
+```
+
+### From Source
+```bash
+git clone https://github.com/saswat/proto.git
+cd proto
+go install ./cmd/proto
+```
+
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/). The current version is v0.1.0.
+
+- v0.1.0: Initial release
+  - Basic proto file management
+  - Git repository integration
+  - Go and Python SDK generation
 
 ## Prerequisites
 
