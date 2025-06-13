@@ -30,7 +30,9 @@ func TestConfig(t *testing.T) {
 			config: &Config{
 				GitHubURL:    "https://github.com/example/proto",
 				Branch:       "main",
-				OutputDir:    "./protos",
+				ProtoPath:    "api/proto",
+				ProtoDir:     "./proto",
+				BuildDir:     "./gen",
 				LastCommitID: "abc123",
 			},
 			wantErr: false,
@@ -40,7 +42,9 @@ func TestConfig(t *testing.T) {
 			config: &Config{
 				GitHubURL:    "",
 				Branch:       "",
-				OutputDir:    "",
+				ProtoPath:    "",
+				ProtoDir:     "",
+				BuildDir:     "",
 				LastCommitID: "",
 			},
 			wantErr: false,
@@ -70,8 +74,14 @@ func TestConfig(t *testing.T) {
 				if got.Branch != tt.config.Branch {
 					t.Errorf("LoadConfig() Branch = %v, want %v", got.Branch, tt.config.Branch)
 				}
-				if got.OutputDir != tt.config.OutputDir {
-					t.Errorf("LoadConfig() OutputDir = %v, want %v", got.OutputDir, tt.config.OutputDir)
+				if got.ProtoPath != tt.config.ProtoPath {
+					t.Errorf("LoadConfig() ProtoPath = %v, want %v", got.ProtoPath, tt.config.ProtoPath)
+				}
+				if got.ProtoDir != tt.config.ProtoDir {
+					t.Errorf("LoadConfig() ProtoDir = %v, want %v", got.ProtoDir, tt.config.ProtoDir)
+				}
+				if got.BuildDir != tt.config.BuildDir {
+					t.Errorf("LoadConfig() BuildDir = %v, want %v", got.BuildDir, tt.config.BuildDir)
 				}
 				if got.LastCommitID != tt.config.LastCommitID {
 					t.Errorf("LoadConfig() LastCommitID = %v, want %v", got.LastCommitID, tt.config.LastCommitID)
@@ -102,7 +112,7 @@ func TestLoadConfigNonExistent(t *testing.T) {
 	if config == nil {
 		t.Error("LoadConfig() returned nil config, want empty config")
 	}
-	if config.GitHubURL != "" || config.Branch != "" || config.OutputDir != "" || config.LastCommitID != "" {
+	if config.GitHubURL != "" || config.Branch != "" || config.ProtoPath != "" || config.ProtoDir != "" || config.BuildDir != "" || config.LastCommitID != "" {
 		t.Error("LoadConfig() returned non-empty config for non-existent file")
 	}
 }
@@ -123,7 +133,9 @@ func TestSaveConfigInvalidPath(t *testing.T) {
 	config := &Config{
 		GitHubURL:    "https://github.com/example/proto",
 		Branch:       "main",
-		OutputDir:    "./protos",
+		ProtoPath:    "api/proto",
+		ProtoDir:     "./proto",
+		BuildDir:     "./gen",
 		LastCommitID: "abc123",
 	}
 
